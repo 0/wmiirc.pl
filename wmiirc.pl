@@ -107,6 +107,16 @@ sub shift_tag {
 	$tags[((first {$tags[$_] eq $cur} 0..$#tags) + $dir) % @tags];
 }
 
+my @tag_stack;
+
+sub update_tag_stack {
+	my ($tag) = @_;
+
+	my @temp_stack = grep { !/^${tag}$/ } @tag_stack;
+	push (@temp_stack, $tag);
+	@tag_stack = @temp_stack;
+}
+
 ### Change current directory
 
 chdir($ENV{HOME});
@@ -212,6 +222,13 @@ my %keys = (
 	"$key{mod}-Right" => sub {
 		my $new_tag = shift_tag(+1);
 		ywrite('/ctl', "view $new_tag");
+	},
+
+	"$key{mod}-Tab" => sub {
+		return if @tag_stack < 2;
+
+		my $prev_tag = $tag_stack[-2];
+		ywrite('/ctl', "view $prev_tag");
 	},
 
 	"$key{mod}-p" => sub {
@@ -450,6 +467,7 @@ while (<EVENT_READ>) {
 	} elsif (/^DestroyTag (.*)/) {
 		yremove("/lbar/$1");
 	} elsif (/^FocusTag (.*)/) {
+		update_tag_stack($1);
 		ywrite("/lbar/$1", "$focus_colors $1");
 	} elsif (/^UnfocusTag (.*)/) {
 		ywrite("/lbar/$1", "$normal_colors $1");
