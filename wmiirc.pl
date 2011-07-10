@@ -9,6 +9,7 @@ use 5.010;
 
 use File::Basename; # fileparse
 use File::Temp qw(tempfile);
+use IO::Socket::UNIX;
 use Lib::IXP qw(:subs :consts);
 use List::MoreUtils qw(uniq);
 use List::Util qw(first);
@@ -115,6 +116,15 @@ sub update_tag_stack {
 	my @temp_stack = grep { !/^${tag}$/ } @tag_stack;
 	push (@temp_stack, $tag);
 	@tag_stack = @temp_stack;
+}
+
+my $VLC_SOCK = '/tmp/vlc.sock';
+
+sub vlc_cmd {
+	my ($cmd) = @_;
+
+	my $sock = IO::Socket::UNIX->new(Peer => $VLC_SOCK) or return;
+	print $sock $cmd;
 }
 
 ### Change current directory
@@ -266,6 +276,28 @@ my %keys = (
 
 	'Print' => sub {
 		launch_external('import /tmp/foo.png');
+	},
+
+	'XF86AudioPlay' => sub {
+		vlc_cmd('pause');
+	},
+	'Shift-XF86AudioPlay' => sub {
+		vlc_cmd('play');
+	},
+	'XF86AudioStop' => sub {
+		vlc_cmd('stop');
+	},
+	'XF86AudioNext' => sub {
+		vlc_cmd('next');
+	},
+	'XF86AudioPrev' => sub {
+		vlc_cmd('prev');
+	},
+	'Shift-XF86AudioNext' => sub {
+		vlc_cmd('key key-jump+short');
+	},
+	'Shift-XF86AudioPrev' => sub {
+		vlc_cmd('key key-jump-short');
 	},
 );
 
