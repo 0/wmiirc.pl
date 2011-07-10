@@ -86,6 +86,12 @@ sub tagmenu {
 	return `echo -e $tags | wimenu`;
 }
 
+sub float {
+	if (grep {!/^select ~$/} cur_tag_info()) {
+		ywrite('/tag/sel/ctl', 'select ~');
+	}
+}
+
 sub cur_tag_info {
 	my $ctl = yread('/tag/sel/ctl');
 	return split('\n', $ctl);
@@ -246,13 +252,12 @@ my %keys = (
 	},
 
 	"$key{mod_alt}-space" => sub {
+		float();
 		launch_external("$term -e alsamixer");
 	},
 
 	"$key{mod}-w" => sub {
-		if (grep {!/^select ~$/} cur_tag_info()) {
-			ywrite('/tag/sel/ctl', 'select ~');
-		}
+		float();
 		launch_external('~/uw-weather/fetch.pl | xmessage -default okay -center -file -');
 	},
 
